@@ -1,6 +1,6 @@
-from loggity import Logger
+from loggity import Logger, Colors
 
-log = Logger()
+log = Logger(colored=True)
 
 # Basic usage
 log.info("Server started on port 8000")
@@ -10,4 +10,8 @@ log.debug("Received payload: {'temp': 23.5}")
 log.success("Database migration completed")
 
 # Custom usage
-log.custom("METRIC", "Response time: 245ms")
+log.custom("METRIC", Colors.MAGENTA, "Response time: 245ms")
+
+# Plain
+plain_log = Logger(colored=False)
+plain_log.debug("Plain log")
