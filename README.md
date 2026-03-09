@@ -1,7 +1,7 @@
 # Loggity
 > A simple, beautiful logger with a clean and intuitive interface
 
-![Version](https://img.shields.io/badge/version-0.3.0-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.3.1-blue?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-alpha-red?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 ![Python](https://img.shields.io/badge/python-3.7+-blue?style=for-the-badge&logo=python&logoColor=white)
@@ -139,8 +139,8 @@ log.error("Connection failed")
 ```
 Output:
 ```
-[143022] INFO:    Server started
-[143022] ERROR:   Connection failed
+[17:37:33.331522] INFO:    Server started
+[17:37:33.331591] ERROR:   Connection failed
 ```
 
 ### Colors Only
@@ -160,7 +160,7 @@ log.warn("Low disk space")
 ```
 Output:
 ```
-[143022] WARN:    Low disk space
+[17:37:33.331522] WARN:    Low disk space
 ```
 
 ### Plain
