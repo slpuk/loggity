@@ -1,3 +1,5 @@
+from datetime import datetime
+
 class Colors:
     RESET = '\033[0m'
 
@@ -21,15 +23,22 @@ class Logger:
         'SUCCESS': Colors.GREEN,
     }
     
-    def __init__(self, colored=True):
+    def __init__(self, colored: bool = True, timestamps: bool = False):
         self.colored = colored
+        self.timestamps = timestamps
         
     def _log(self, header, color, message):
         """Internal log method"""
         if self.colored:
-            print(f"{color}{header}{Colors.RESET}:    \t{message}")
+            if self.timestamps:
+                print(f"[{datetime.now().strftime('%H%M%S')}] {color}{header}{Colors.RESET}:    \t{message}")
+            else:
+                print(f"{color}{header}{Colors.RESET}:    \t{message}")
         else:
-            print(f"{header}:    \t{message}")
+            if self.timestamps:
+                print(f"[{datetime.now().strftime('%H%M%S')}] {header}:    \t{message}")
+            else:
+                print(f"{header}:    \t{message}")
     
     def info(self, message):
         """Informational message (blue)"""
@@ -44,7 +53,7 @@ class Logger:
         self._log('ERROR', Logger._default_colors['ERROR'], message)
     
     def debug(self, message):
-        """Debug message (cyan)"""
+        """Debug message (white)"""
         self._log('DEBUG', Logger._default_colors['DEBUG'], message)
     
     def success(self, message):
