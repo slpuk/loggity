@@ -1,20 +1,21 @@
 # Loggity
 > A simple, beautiful logger with a clean and intuitive interface
 
-![Version](https://img.shields.io/badge/version-0.2.0-blue?style=for-the-badge)
-![Status](https://img.shields.io/badge/status-alpha-orange?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.3.0-blue?style=for-the-badge)
+![Status](https://img.shields.io/badge/status-alpha-red?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 ![Python](https://img.shields.io/badge/python-3.7+-blue?style=for-the-badge&logo=python&logoColor=white)
 
 ## Features
 
 - **Colorful output**: Beautiful ANSI colors for different log levels
+- **Timestamps**: Optional timestamps in `HH:MM:SS.ms` format
 - **Simple API**: Just create a logger and start logging
 - **Multiple log levels**: INFO (blue), WARN (yellow), ERROR (red), DEBUG (white), SUCCESS (green)
 - **Custom headers**: Create your own log types with custom colors
 - **Lightweight**: Pure Python, no external dependencies
 - **Clean formatting**: Consistent spacing and aligned output
-- **Toggle colors**: Enable/disable colored output as needed
+- **Toggle features**: Enable/disable colors and timestamps independently
 
 ## Installation
 
@@ -27,15 +28,59 @@ pip install loggity
 ```python
 from loggity import Logger
 
-# Create a logger instance (colors enabled by default)
+# Create a logger instance with default settings (colors enabled, no timestamps)
 log = Logger()
 
 # Start logging with beautiful colors
-log.info("Application started")                 # Blue
-log.success("Database connected successfully")  # Green
-log.warn("Disk space running low")              # Yellow
-log.error("Failed to send email")               # Red
-log.debug("Cache miss for key: user_123")       # White
+log.info("Application started")              # Blue
+log.success("Database connected successfully") # Green
+log.warn("Disk space running low")           # Yellow
+log.error("Failed to send email")             # Red
+log.debug("Cache miss for key: user_123")     # White
+```
+
+## Configuration
+
+### With Timestamps
+
+Enable timestamps to track when events occur:
+
+```python
+from loggity import Logger
+
+# Enable both colors and timestamps
+log = Logger(colored=True, timestamps=True)
+
+# Output will include timestamps
+log.info("Server started on port 8000")
+# [143022] INFO:    Server started on port 8000
+log.warn("Config file not found, using defaults")
+# [143022] WARN:    Config file not found, using defaults
+```
+
+### Plain Output (No Colors)
+
+Perfect for logging to files or environments that don't support ANSI colors:
+
+```python
+# Disable colors, keep timestamps
+log = Logger(colored=False, timestamps=True)
+
+# Output without colors
+log.info("Writing to log file")
+# [143022] INFO:    Writing to log file
+```
+
+### Minimal Output
+
+Disable both colors and timestamps for clean, simple output:
+
+```python
+# Plain logger without any formatting
+log = Logger(colored=False, timestamps=False)
+
+log.info("Clean output")
+# INFO:    Clean output
 ```
 
 ## API Reference
@@ -59,7 +104,7 @@ Create logs with custom headers and colors using the `Colors` class:
 ```python
 from loggity import Logger, Colors
 
-log = Logger()
+log = Logger(timestamps=True)
 
 # Custom log types with any color
 log.custom("AUDIT", Colors.MAGENTA, "User admin performed deletion")
@@ -84,47 +129,73 @@ The `Colors` class provides the following ANSI color codes:
 | `Colors.CYAN` | `log.custom("CYAN", Colors.CYAN, "message")` |
 | `Colors.WHITE` | `log.custom("WHITE", Colors.WHITE, "message")` |
 
-### Configuration
+## Output Format Examples
 
-#### Disable Colors
+### Full Features (Colors + Timestamps)
+```python
+log = Logger(colored=True, timestamps=True)
+log.info("Server started")
+log.error("Connection failed")
+```
+Output:
+```
+[143022] INFO:    Server started
+[143022] ERROR:   Connection failed
+```
 
-If you need to disable colored output:
+### Colors Only
+```python
+log = Logger(colored=True, timestamps=False)
+log.success("Task completed")
+```
+Output:
+```
+SUCCESS:    Task completed
+```
+
+### Timestamps Only
+```python
+log = Logger(colored=False, timestamps=True)
+log.warn("Low disk space")
+```
+Output:
+```
+[143022] WARN:    Low disk space
+```
+
+### Plain
+```python
+log = Logger(colored=False, timestamps=False)
+log.custom("TEST", Colors.RED, "Color is ignored")
+```
+Output:
+```
+TEST:    Color is ignored
+```
+
+## Complete Example
 
 ```python
-# Create logger without colors
-log = Logger(colored=False)
+from loggity import Logger, Colors
 
-# All output will be plain text
-log.info("This will be without colors")
-log.custom("PLAIN", Colors.RED, "Color parameter is ignored")  # Color is ignored when colored=False
-```
+# Logger with colors and timestamps
+log = Logger(colored=True, timestamps=True)
 
-## Output Format
+# Basic usage
+log.info("Server started on port 8000")
+log.warn("Config file not found, using defaults")
+log.error("Failed to connect to database")
+log.debug("Received payload: {'temp': 23.5}")
+log.success("Database migration completed")
 
-### Colored Output
-When colors are enabled (`colored=True`, default), the header appears in its designated color:
-```
-INFO:        Application started
-SUCCESS:     Database connected successfully
-WARN:        Disk space running low
-ERROR:       Failed to send email
-DEBUG:       Cache miss for key: user_123
-AUDIT:       User admin performed deletion
-METRIC:      Response time: 245ms
-```
+# Custom usage
+log.custom("METRIC", Colors.MAGENTA, "Response time: 245ms")
 
-### Plain Output
-When colors are disabled (`colored=False`):
-```
-INFO:        Application started
-SUCCESS:     Database connected successfully
-WARN:        Disk space running low
-ERROR:       Failed to send email
-DEBUG:       Cache miss for key: user_123
-AUDIT:       User admin performed deletion
-METRIC:      Response time: 245ms
+# Plain logger without any formatting
+plain_log = Logger(colored=False, timestamps=False)
+plain_log.info("Plain log entry")
 ```
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](https://github.com/slpuk/loggity/blob/main/LICENSE).
