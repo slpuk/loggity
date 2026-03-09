@@ -53,9 +53,9 @@ log = Logger(colored=True, timestamps=True)
 
 # Output will include timestamps
 log.info("Server started on port 8000")
-# [143022] INFO:    Server started on port 8000
+# [17:37:33.331522] INFO:    Server started on port 8000
 log.warn("Config file not found, using defaults")
-# [143022] WARN:    Config file not found, using defaults
+# [17:37:33.331591] WARN:    Config file not found, using defaults
 ```
 
 ### Plain Output (No Colors)
@@ -68,7 +68,7 @@ log = Logger(colored=False, timestamps=True)
 
 # Output without colors
 log.info("Writing to log file")
-# [143022] INFO:    Writing to log file
+# [17:37:33.331522] INFO:    Writing to log file
 ```
 
 ### Minimal Output
