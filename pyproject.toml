@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "loggity"
-version = "0.3.0-alpha.3"
+version = "0.3.1-alpha.4"
 authors = [
     {name = "slpuk", email = "yarik6052@gmail.com"},
 ]
