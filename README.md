@@ -1,21 +1,22 @@
 # Loggity
 > A simple, beautiful logger with a clean and intuitive interface
 
-![Version](https://img.shields.io/badge/version-0.3.1-blue?style=for-the-badge)
-![Status](https://img.shields.io/badge/status-alpha-red?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.4.0-blue?style=for-the-badge)
+![Status](https://img.shields.io/badge/status-alpha-orange?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 ![Python](https://img.shields.io/badge/python-3.7+-blue?style=for-the-badge&logo=python&logoColor=white)
 
 ## Features
 
 - **Colorful output**: Beautiful ANSI colors for different log levels
-- **Timestamps**: Optional timestamps in `HH:MM:SS.ms` format
+- **Flexible timestamps**: Custom timestamp formats using `strftime`
 - **Simple API**: Just create a logger and start logging
 - **Multiple log levels**: INFO (blue), WARN (yellow), ERROR (red), DEBUG (white), SUCCESS (green)
 - **Custom headers**: Create your own log types with custom colors
 - **Lightweight**: Pure Python, no external dependencies
 - **Clean formatting**: Consistent spacing and aligned output
-- **Toggle features**: Enable/disable colors and timestamps independently
+- **Dataclass config**: Type-safe configuration with `LoggerConfig`
+- **Runtime formatting**: Change timestamp format on the fly with `set_format()`
 
 ## Installation
 
@@ -28,7 +29,7 @@ pip install loggity
 ```python
 from loggity import Logger
 
-# Create a logger instance with default settings (colors enabled, no timestamps)
+# Create a logger instance with default settings
 log = Logger()
 
 # Start logging with beautiful colors
@@ -41,82 +42,113 @@ log.debug("Cache miss for key: user_123")     # White
 
 ## Configuration
 
-### With Timestamps
+Loggity uses a dataclass-based configuration system for type-safe and flexible setup:
 
-Enable timestamps to track when events occur:
+### LoggerConfig Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `colored` | `bool` | `True` | Enable/disable ANSI colors |
+| `timestamps` | `bool` | `False` | Enable/disable timestamps |
+| `timeformat` | `str` or `None` | `None` | `strftime` format string (requires `timestamps=True`) |
+
+### Basic Configuration
 
 ```python
-from loggity import Logger
+from loggity import Logger, LoggerConfig
 
-# Enable both colors and timestamps
-log = Logger(colored=True, timestamps=True)
+# Create configuration
+config = LoggerConfig(
+    colored=True,
+    timestamps=True,
+    timeformat="%H:%M:%S"  # 24-hour format: 14:30:22
+)
 
-# Output will include timestamps
-log.info("Server started on port 8000")
-# [17:37:33.331522] INFO:    Server started on port 8000
-log.warn("Config file not found, using defaults")
-# [17:37:33.331591] WARN:    Config file not found, using defaults
+# Apply configuration
+log = Logger(config=config)
+
+log.info("Server started")
+# [14:30:22] INFO:    Server started
 ```
 
-### Plain Output (No Colors)
+### Timestamp Formats
 
-Perfect for logging to files or environments that don't support ANSI colors:
+The `timeformat` parameter accepts any valid `strftime` format string:
 
 ```python
-# Disable colors, keep timestamps
-log = Logger(colored=False, timestamps=True)
+# Various timestamp formats
+formats = {
+    "simple": "%H%M%S",           # 143022
+    "readable": "%H:%M:%S",        # 14:30:22
+    "with_ms": "%H:%M:%S.%f",      # 14:30:22.123456
+    "date_and_time": "%Y-%m-%d %H:%M:%S",  # 2024-01-15 14:30:22
+    "compact": "%y%m%d_%H%M%S",    # 240115_143022
+}
 
-# Output without colors
-log.info("Writing to log file")
-# [17:37:33.331522] INFO:    Writing to log file
+for name, fmt in formats.items():
+    config = LoggerConfig(timestamps=True, timeformat=fmt)
+    log = Logger(config=config)
+    log.info(f"Testing {name} format")
 ```
 
-### Minimal Output
+### Runtime Format Changes
 
-Disable both colors and timestamps for clean, simple output:
+Change the timestamp format dynamically using `set_format()`:
 
 ```python
-# Plain logger without any formatting
-log = Logger(colored=False, timestamps=False)
+log = Logger(config=LoggerConfig(timestamps=True, timeformat="%H:%M:%S"))
 
-log.info("Clean output")
-# INFO:    Clean output
+log.info("Starting process")        # [14:30:22] INFO:    Starting process
+
+# Switch to compact format
+log.set_format("%H%M%S")
+log.info("Processing data")          # [143022] INFO:    Processing data
+
+# Disable timestamps
+log.set_format("")                   # Empty string disables timestamps
+log.info("Task completed")           # INFO:    Task completed
 ```
 
 ## API Reference
 
-### Basic Methods
+### Logger Methods
+
+#### Basic Methods
 
 All basic methods come with predefined colors:
 
-| Method | Color | Description | Example |
-|--------|-------|-------------|---------|
-| `info(message)` | Blue | Informational messages | `log.info("Server started on port 8080")` |
-| `warn(message)` | Yellow | Warning messages | `log.warn("API rate limit at 90%")` |
-| `error(message)` | Red | Error messages | `log.error("Connection timeout")` |
-| `debug(message)` | White | Debug messages | `log.debug("Request payload: {...}")` |
-| `success(message)` | Green | Success messages | `log.success("Data exported")` |
+| Method | Color | Description |
+|--------|-------|-------------|
+| `info(message)` | Blue | Informational messages |
+| `warn(message)` | Yellow | Warning messages |
+| `error(message)` | Red | Error messages |
+| `debug(message)` | White | Debug messages |
+| `success(message)` | Green | Success messages |
 
-### Custom Logging with Colors
+#### Configuration Methods
 
-Create logs with custom headers and colors using the `Colors` class:
+| Method | Description | Example |
+|--------|-------------|---------|
+| `set_format(format_string)` | Change timestamp format at runtime | `log.set_format("%H:%M:%S")` |
+
+#### Custom Logging
+
+Create logs with custom headers and colors:
 
 ```python
-from loggity import Logger, Colors
+from loggity import Logger, Colors, LoggerConfig
 
-log = Logger(timestamps=True)
+log = Logger(config=LoggerConfig(timestamps=True, timeformat="%H:%M:%S"))
 
 # Custom log types with any color
 log.custom("AUDIT", Colors.MAGENTA, "User admin performed deletion")
 log.custom("METRIC", Colors.CYAN, "Response time: 245ms")
 log.custom("SECURITY", Colors.RED, "Failed login attempt from 192.168.1.100")
-log.custom("PERFORMANCE", Colors.BLUE, "Query executed in 0.3s")
-log.custom("CACHE", Colors.GREEN, "Hit ratio: 94%")
 ```
 
 ### Available Colors
 
-The `Colors` class provides the following ANSI color codes:
+The `Colors` class provides ANSI color codes:
 
 | Color | Usage |
 |-------|-------|
@@ -129,71 +161,87 @@ The `Colors` class provides the following ANSI color codes:
 | `Colors.CYAN` | `log.custom("CYAN", Colors.CYAN, "message")` |
 | `Colors.WHITE` | `log.custom("WHITE", Colors.WHITE, "message")` |
 
-## Output Format Examples
+## Complete Examples
 
-### Full Features (Colors + Timestamps)
-```python
-log = Logger(colored=True, timestamps=True)
-log.info("Server started")
-log.error("Connection failed")
-```
-Output:
-```
-[17:37:33.331522] INFO:    Server started
-[17:37:33.331591] ERROR:   Connection failed
-```
-
-### Colors Only
-```python
-log = Logger(colored=True, timestamps=False)
-log.success("Task completed")
-```
-Output:
-```
-SUCCESS:    Task completed
-```
-
-### Timestamps Only
-```python
-log = Logger(colored=False, timestamps=True)
-log.warn("Low disk space")
-```
-Output:
-```
-[17:37:33.331522] WARN:    Low disk space
-```
-
-### Plain
-```python
-log = Logger(colored=False, timestamps=False)
-log.custom("TEST", Colors.RED, "Color is ignored")
-```
-Output:
-```
-TEST:    Color is ignored
-```
-
-## Complete Example
+### Basic Usage with Different Formats
 
 ```python
-from loggity import Logger, Colors
+from loggity import Logger, Colors, LoggerConfig
 
-# Logger with colors and timestamps
-log = Logger(colored=True, timestamps=True)
+# Logger with milliseconds timestamp
+config = LoggerConfig(
+    colored=True,
+    timestamps=True,
+    timeformat="%H:%M:%S.%f"
+)
+log = Logger(config=config)
 
-# Basic usage
 log.info("Server started on port 8000")
+# [14:30:22.123456] INFO:    Server started on port 8000
+
 log.warn("Config file not found, using defaults")
+# [14:30:22.123789] WARN:    Config file not found, using defaults
+
+# Change to compact format
+log.set_format("%H%M%S")
 log.error("Failed to connect to database")
-log.debug("Received payload: {'temp': 23.5}")
+# [143022] ERROR:    Failed to connect to database
+
+# Disable timestamps
+log.set_format("")
 log.success("Database migration completed")
+# SUCCESS:    Database migration completed
+```
 
-# Custom usage
+### Custom Headers with Colors
+
+```python
 log.custom("METRIC", Colors.MAGENTA, "Response time: 245ms")
+# [14:30:22] METRIC:    Response time: 245ms
+```
 
-# Plain logger without any formatting
-plain_log = Logger(colored=False, timestamps=False)
+### Plain Logger (No Colors, No Timestamps)
+
+```python
+plain_config = LoggerConfig(colored=False, timestamps=False)
+plain_log = Logger(config=plain_config)
+
 plain_log.info("Plain log entry")
+# INFO:    Plain log entry
+```
+
+### Multiple Loggers with Different Configurations
+
+```python
+from loggity import Logger, LoggerConfig
+
+# Development logger with detailed timestamps
+dev_config = LoggerConfig(
+    colored=True,
+    timestamps=True,
+    timeformat="%H:%M:%S.%f"
+)
+dev_log = Logger(config=dev_config)
+
+# Production logger with minimal output
+prod_config = LoggerConfig(colored=False, timestamps=False)
+prod_log = Logger(config=prod_config)
+
+dev_log.debug("Processing request...")
+prod_log.info("Request completed")
+```
+
+## Error Handling
+
+The logger gracefully handles invalid timestamp formats:
+
+```python
+log = Logger(config=LoggerConfig(timestamps=True, timeformat="%invalid"))
+
+# Invalid format triggers a custom error log
+log.info("This will still work")  
+# [LOGGITY:    ERROR] Invalid format string
+# INFO:    This will still work
 ```
 
 ## License
