@@ -1,5 +1,5 @@
-from .logger import Logger, Colors
+from .logger import Logger, Colors, LoggerConfig
 
-__version__ = "0.3.1-alpha.4"
+__version__ = "0.4.0-alpha.5"
 __author__ = "slpuk"
-__all__ = ["Logger", "Colors"]
+__all__ = ["Logger", "Colors", "LoggerConfig"]
