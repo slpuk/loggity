@@ -1,6 +1,8 @@
 from loggity import Logger, Colors, LoggerConfig
 
-config = LoggerConfig(colored=True, timestamps=False, timeformat="%H:%M:%S.%f")
+config = LoggerConfig(
+    colored=True, timestamps=True, timeformat="%H:%M:%S.%f", file="logger.log"
+)
 
 log = Logger(config=config)
 
@@ -17,6 +19,6 @@ log.success("Database migration completed")
 log.custom("METRIC", Colors.MAGENTA, "Response time: 245ms")
 
 # Plain
-plain_config = LoggerConfig(colored=False, timestamps=False, timeformat=None)
+plain_config = LoggerConfig(colored=False, timestamps=False, timeformat=None, file=None)
 plain_log = Logger(config=plain_config)
 plain_log.info("Plain log")
