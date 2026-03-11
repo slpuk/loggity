@@ -1,7 +1,7 @@
 # Loggity
 > A simple, beautiful logger with a clean and intuitive interface
 
-![Version](https://img.shields.io/badge/version-0.4.0-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.5.0-blue?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-alpha-orange?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 ![Python](https://img.shields.io/badge/python-3.7+-blue?style=for-the-badge&logo=python&logoColor=white)
@@ -10,6 +10,7 @@
 
 - **Colorful output**: Beautiful ANSI colors for different log levels
 - **Flexible timestamps**: Custom timestamp formats using `strftime`
+- **File logging**: Write logs to files with automatic session separation
 - **Simple API**: Just create a logger and start logging
 - **Multiple log levels**: INFO (blue), WARN (yellow), ERROR (red), DEBUG (white), SUCCESS (green)
 - **Custom headers**: Create your own log types with custom colors
@@ -51,24 +52,44 @@ Loggity uses a dataclass-based configuration system for type-safe and flexible s
 | `colored` | `bool` | `True` | Enable/disable ANSI colors |
 | `timestamps` | `bool` | `False` | Enable/disable timestamps |
 | `timeformat` | `str` or `None` | `None` | `strftime` format string (requires `timestamps=True`) |
+| `file` | `str` or `None` | `None` | Path to log file (enables file logging) |
 
 ### Basic Configuration
 
 ```python
 from loggity import Logger, LoggerConfig
 
-# Create configuration
+# Create configuration with timestamps and file logging
 config = LoggerConfig(
     colored=True,
     timestamps=True,
-    timeformat="%H:%M:%S"  # 24-hour format: 14:30:22
+    timeformat="%H:%M:%S",  # 24-hour format: 14:30:22
+    file="app.log"          # Write logs to app.log
 )
 
 # Apply configuration
 log = Logger(config=config)
 
 log.info("Server started")
-# [14:30:22] INFO:    Server started
+# Console: [14:30:22] INFO:    Server started
+# File:    [14:30:22] INFO:    Server started (no colors)
+```
+
+### File Logging
+
+When file logging is enabled, Loggity automatically:
+
+- Creates/opens the log file in append mode
+- Adds a session separator when logger starts
+- Writes all logs without ANSI color codes
+- Handles file write errors gracefully
+
+Example log file content:
+```
+=== Started at 2026-03-11 19:30:00.123456
+[14:30:22] INFO:    Server started on port 8000
+[14:30:23] WARN:    Config file not found, using defaults
+[14:30:24] ERROR:   Failed to connect to database
 ```
 
 ### Timestamp Formats
@@ -78,15 +99,15 @@ The `timeformat` parameter accepts any valid `strftime` format string:
 ```python
 # Various timestamp formats
 formats = {
-    "simple": "%H%M%S",           # 143022
-    "readable": "%H:%M:%S",        # 14:30:22
-    "with_ms": "%H:%M:%S.%f",      # 14:30:22.123456
-    "date_and_time": "%Y-%m-%d %H:%M:%S",  # 2024-01-15 14:30:22
-    "compact": "%y%m%d_%H%M%S",    # 240115_143022
+    "simple": "%H%M%S",                    # 143022
+    "readable": "%H:%M:%S",                 # 14:30:22
+    "with_ms": "%H:%M:%S.%f",               # 14:30:22.123456
+    "date_and_time": "%Y-%m-%d %H:%M:%S",   # 2024-01-15 14:30:22
+    "compact": "%y%m%d_%H%M%S",             # 240115_143022
 }
 
 for name, fmt in formats.items():
-    config = LoggerConfig(timestamps=True, timeformat=fmt)
+    config = LoggerConfig(timestamps=True, timeformat=fmt, file="test.log")
     log = Logger(config=config)
     log.info(f"Testing {name} format")
 ```
@@ -96,7 +117,11 @@ for name, fmt in formats.items():
 Change the timestamp format dynamically using `set_format()`:
 
 ```python
-log = Logger(config=LoggerConfig(timestamps=True, timeformat="%H:%M:%S"))
+log = Logger(config=LoggerConfig(
+    timestamps=True,
+    timeformat="%H:%M:%S",
+    file="app.log"
+))
 
 log.info("Starting process")        # [14:30:22] INFO:    Starting process
 
@@ -138,7 +163,11 @@ Create logs with custom headers and colors:
 ```python
 from loggity import Logger, Colors, LoggerConfig
 
-log = Logger(config=LoggerConfig(timestamps=True, timeformat="%H:%M:%S"))
+log = Logger(config=LoggerConfig(
+    timestamps=True,
+    timeformat="%H:%M:%S",
+    file="audit.log"
+))
 
 # Custom log types with any color
 log.custom("AUDIT", Colors.MAGENTA, "User admin performed deletion")
@@ -163,51 +192,37 @@ The `Colors` class provides ANSI color codes:
 
 ## Complete Examples
 
-### Basic Usage with Different Formats
+### Full-Featured Logger with File Output
 
 ```python
 from loggity import Logger, Colors, LoggerConfig
 
-# Logger with milliseconds timestamp
+# Logger with colors, milliseconds timestamp, and file output
 config = LoggerConfig(
     colored=True,
     timestamps=True,
-    timeformat="%H:%M:%S.%f"
+    timeformat="%H:%M:%S.%f",
+    file="application.log"
 )
 log = Logger(config=config)
 
 log.info("Server started on port 8000")
-# [14:30:22.123456] INFO:    Server started on port 8000
+# Console: [14:30:22.123456] INFO:    Server started on port 8000
+# File:    [14:30:22.123456] INFO:    Server started on port 8000
 
 log.warn("Config file not found, using defaults")
-# [14:30:22.123789] WARN:    Config file not found, using defaults
-
-# Change to compact format
-log.set_format("%H%M%S")
 log.error("Failed to connect to database")
-# [143022] ERROR:    Failed to connect to database
+
+# Change format dynamically
+log.set_format("%H%M%S")
+log.debug("Received payload: {'temp': 23.5}")
 
 # Disable timestamps
 log.set_format("")
 log.success("Database migration completed")
-# SUCCESS:    Database migration completed
-```
 
-### Custom Headers with Colors
-
-```python
+# Custom logging
 log.custom("METRIC", Colors.MAGENTA, "Response time: 245ms")
-# [14:30:22] METRIC:    Response time: 245ms
-```
-
-### Plain Logger (No Colors, No Timestamps)
-
-```python
-plain_config = LoggerConfig(colored=False, timestamps=False)
-plain_log = Logger(config=plain_config)
-
-plain_log.info("Plain log entry")
-# INFO:    Plain log entry
 ```
 
 ### Multiple Loggers with Different Configurations
@@ -215,35 +230,95 @@ plain_log.info("Plain log entry")
 ```python
 from loggity import Logger, LoggerConfig
 
-# Development logger with detailed timestamps
+# Development logger with detailed output
 dev_config = LoggerConfig(
     colored=True,
     timestamps=True,
-    timeformat="%H:%M:%S.%f"
+    timeformat="%H:%M:%S.%f",
+    file="dev.log"
 )
 dev_log = Logger(config=dev_config)
 
 # Production logger with minimal output
-prod_config = LoggerConfig(colored=False, timestamps=False)
+prod_config = LoggerConfig(
+    colored=False,
+    timestamps=True,
+    timeformat="%Y-%m-%d %H:%M:%S",
+    file="prod.log"
+)
 prod_log = Logger(config=prod_config)
+
+# Audit logger for security events
+audit_config = LoggerConfig(
+    colored=True,
+    timestamps=True,
+    timeformat="%Y-%m-%d %H:%M:%S",
+    file="audit.log"
+)
+audit_log = Logger(config=audit_config)
 
 dev_log.debug("Processing request...")
 prod_log.info("Request completed")
+audit_log.custom("AUDIT", Colors.MAGENTA, "User login: admin")
+```
+
+### Plain Logger (No Colors, No Timestamps, No File)
+
+```python
+plain_config = LoggerConfig(
+    colored=False,
+    timestamps=False,
+    file=None
+)
+plain_log = Logger(config=plain_config)
+
+plain_log.info("Plain log entry")
+# INFO:    Plain log entry
 ```
 
 ## Error Handling
 
-The logger gracefully handles invalid timestamp formats:
+The logger gracefully handles various error conditions:
 
 ```python
-log = Logger(config=LoggerConfig(timestamps=True, timeformat="%invalid"))
-
-# Invalid format triggers a custom error log
-log.info("This will still work")  
+# Invalid timestamp format
+log = Logger(config=LoggerConfig(
+    timestamps=True,
+    timeformat="%invalid"
+))
+log.info("This will still work")
 # [LOGGITY:    ERROR] Invalid format string
 # INFO:    This will still work
+
+# Invalid file path
+config = LoggerConfig(file="/invalid/path/log.log")
+log = Logger(config=config)  # Logs error but continues
+log.info("Application running")  # Still logs to console
+```
+
+## File Logging Details
+
+When file logging is enabled:
+
+1. **Session Separation**: Each logger instance adds a session marker
+2. **No Colors**: Files contain plain text without ANSI codes
+3. **UTF-8 Encoding**: Files are written with UTF-8 encoding
+4. **Append Mode**: Logs are appended, existing content preserved
+5. **Error Resilience**: File write errors are logged but don't crash the application
+
+Example log file content:
+```
+=== Started at 2026-03-11 19:30:00.123456
+[14:30:22] INFO:    Server started on port 8000
+[14:30:23] WARN:    Config file not found, using defaults
+[14:30:24] ERROR:   Failed to connect to database
+[14:30:25] DEBUG:   Received payload: {'temp': 23.5}
+[14:30:26] METRIC:  Response time: 245ms
+
+=== Started at 2026-03-11 19:30:05.987654
+[15:45:33] INFO:    Server restarted
 ```
 
 ## License
 
-This project is licensed under the [MIT License](https://github.com/slpuk/loggity/blob/main/LICENSE).
+This project is licensed under the [MIT License](LICENSE).
